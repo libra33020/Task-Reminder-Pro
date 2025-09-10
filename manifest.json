@@ -1,0 +1,11 @@
+{
+  "name": "Task Reminder System",
+  "short_name": "TaskReminder",
+  "description": "Never miss a deadline with automatic push notifications",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "categories": ["productivity", "business"]
+}
