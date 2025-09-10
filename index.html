@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Reminder System</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .task-item {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-left: 4px solid #667eea;
+        }
+
+        .task-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .task-meta {
+            color: #718096;
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            color: white;
+        }
+
+        .btn-complete {
+            background: #48bb78;
+        }
+
+        .btn-delete {
+            background: #f56565;
+        }
+
+        .notification-badge {
+            background: #ff6b6b;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            margin-left: 10px;
+        }
+
+        .notification-setup {
+            background: #f7fafc;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        .status-enabled {
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+
+        .status-disabled {
+            background: #f56565;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(72, 187, 120, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(72, 187, 120, 0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📋 Task Reminder System</h1>
+            <p>Never miss a deadline with push notifications</p>
+        </div>
+
+        <div class="card">
+            <h2>🔔 Notification Settings</h2>
+            <div class="notification-setup">
+                <p>
+                    <span id="notificationStatus" class="status-indicator status-disabled"></span>
+                    <span id="statusText">Notifications are disabled</span>
+                </p>
+                <button class="btn" onclick="enableNotifications()" style="margin-top: 15px;">
+                    Enable Push Notifications
+                </button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>➕ Create New Task</h2>
+            <form id="taskForm">
+                <div class="form-group">
+                    <label for="taskTitle">Task Title</label>
+                    <input type="text" id="taskTitle" required placeholder="Enter task title">
+                </div>
+                
+                <div class="form-group">
+                    <label for="taskDescription">Description</label>
+                    <textarea id="taskDescription" placeholder="Enter description"></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="assignee">Assign To</label>
+                    <input type="text" id="assignee" required placeholder="Team member name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="reminderInterval">Reminder Interval</label>
+                    <select id="reminderInterval">
+                        <option value="60000">Every 1 minute (Demo)</option>
+                        <option value="300000">Every 5 minutes</option>
+                        <option value="900000">Every 15 minutes</option>
+                        <option value="3600000" selected>Every hour</option>
+                        <option value="86400000">Daily</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn">Create Task</button>
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>📝 Active Tasks</h2>
+            <div id="taskList">
+                <p style="color: #718096; text-align: center;">No active tasks</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+        let reminders = new Map();
+
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js')
+                .then(reg => console.log('Service Worker registered'))
+                .catch(err => console.log('Service Worker registration failed'));
+        }
+
+        function checkNotificationStatus() {
+            if ('Notification' in window) {
+                const permission = Notification.permission;
+                const statusEl = document.getElementById('notificationStatus');
+                const statusText = document.getElementById('statusText');
+                
+                if (permission === 'granted') {
+                    statusEl.className = 'status-indicator status-enabled';
+                    statusText.textContent = 'Notifications are enabled';
+                } else {
+                    statusEl.className = 'status-indicator status-disabled';
+                    statusText.textContent = 'Notifications are disabled';
+                }
+            }
+        }
+
+        async function enableNotifications() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    new Notification('✅ Notifications Enabled!', {
+                        body: 'You will now receive task reminders'
+                    });
+                    checkNotificationStatus();
+                }
+            }
+        }
+
+        document.getElementById('taskForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const task = {
+                id: Date.now().toString(),
+                title: document.getElementById('taskTitle').value,
+                description: document.getElementById('taskDescription').value,
+                assignee: document.getElementById('assignee').value,
+                reminderInterval: parseInt(document.getElementById('reminderInterval').value),
+                status: 'pending',
+                createdAt: new Date().toISOString(),
+                reminderCount: 0
+            };
+
+            tasks.push(task);
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+            renderTasks();
+            startReminder(task);
+
+            if (Notification.permission === 'granted') {
+                new Notification('📋 New Task Created', {
+                    body: `"${task.title}" assigned to ${task.assignee}`
+                });
+            }
+
+            document.getElementById('taskForm').reset();
+        });
+
+        function startReminder(task) {
+            if (task.status === 'completed') return;
+
+            console.log(`Starting reminder for: ${task.title}`);
+            
+            const reminder = setInterval(() => {
+                if (task.status === 'completed') {
+                    clearInterval(reminder);
+                    return;
+                }
+
+                task.reminderCount++;
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                renderTasks();
+
+                if (Notification.permission === 'granted') {
+                    console.log(`Sending reminder #${task.reminderCount}`);
+                    new Notification(`⏰ Task Reminder #${task.reminderCount}`, {
+                        body: `"${task.title}" is still pending for ${task.assignee}`,
+                        tag: task.id,
+                        requireInteraction: true
+                    });
+                }
+            }, task.reminderInterval);
+
+            reminders.set(task.id, reminder);
+        }
+
+        function markComplete(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.status = 'completed';
+                task.completedAt = new Date().toISOString();
+                
+                if (reminders.has(taskId)) {
+                    clearInterval(reminders.get(taskId));
+                    reminders.delete(taskId);
+                }
+
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                renderTasks();
+
+                if (Notification.permission === 'granted') {
+                    new Notification('✅ Task Completed!', {
+                        body: `"${task.title}" has been marked as complete`
+                    });
+                }
+            }
+        }
+
+        function deleteTask(taskId) {
+            const taskIndex = tasks.findIndex(t => t.id === taskId);
+            if (taskIndex !== -1) {
+                if (reminders.has(taskId)) {
+                    clearInterval(reminders.get(taskId));
+                    reminders.delete(taskId);
+                }
+
+                tasks.splice(taskIndex, 1);
+                localStorage.setItem('tasks', JSON.stringify(tasks));
+                renderTasks();
+            }
+        }
+
+        function renderTasks() {
+            const taskList = document.getElementById('taskList');
+            const pendingTasks = tasks.filter(t => t.status === 'pending');
+
+            if (pendingTasks.length === 0) {
+                taskList.innerHTML = '<p style="color: #718096; text-align: center;">No active tasks</p>';
+            } else {
+                taskList.innerHTML = pendingTasks.map(task => `
+                    <div class="task-item">
+                        <div class="task-title">
+                            ${task.title}
+                            ${task.reminderCount > 0 ? 
+                                `<span class="notification-badge">${task.reminderCount} reminders sent</span>` : ''}
+                        </div>
+                        <div class="task-meta">
+                            👤 ${task.assignee} | ⏰ Every ${formatInterval(task.reminderInterval)}
+                        </div>
+                        ${task.description ? `<p style="color: #4a5568; margin: 10px 0;">${task.description}</p>` : ''}
+                        <div class="task-actions">
+                            <button class="btn-small btn-complete" onclick="markComplete('${task.id}')">
+                                ✅ Complete
+                            </button>
+                            <button class="btn-small btn-delete" onclick="deleteTask('${task.id}')">
+                                🗑️ Delete
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function formatInterval(ms) {
+            const minutes = ms / 60000;
+            if (minutes < 60) return `${minutes} minute${minutes > 1 ? 's' : ''}`;
+            const hours = minutes / 60;
+            if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''}`;
+            return `${hours / 24} day${hours / 24 > 1 ? 's' : ''}`;
+        }
+
+        checkNotificationStatus();
+        renderTasks();
+
+        tasks.forEach(task => {
+            if (task.status === 'pending') {
+                startReminder(task);
+            }
+        });
+    </script>
+</body>
+</html>
